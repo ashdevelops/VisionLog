@@ -1,0 +1,14 @@
+{
+  "MonitorConfigs": [
+    {
+      "Name": "Bedroom",
+      "RtspUrl": "rtsp://username:password@192.168.4.45:554/stream1",
+      "Segment": 60
+    },
+    {
+      "Name": "Bedroom",
+      "RtspUrl": "rtsp://username:password@192.168.0.65:554/stream4",
+      "Segment": 60
+    }
+  ]
+}
