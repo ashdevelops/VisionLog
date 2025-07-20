@@ -1,48 +1,66 @@
 using Microsoft.Extensions.Hosting;
 
-namespace IpCameraRecorder;
-
-public class ProcessRecordingFiles : BackgroundService
+namespace VisionLog
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public class ProcessRecordingFiles : BackgroundService
     {
-        while (!stoppingToken.IsCancellationRequested)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            ProcessFiles("/mnt/backups", 90, 3);
-            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-        }
-    }
-
-    private static void ProcessFiles(string path, int deleteOlderThanDays, int archiveOlderThanDays)
-    {
-        foreach (var file in Directory.EnumerateFiles(path, "*.mkv", SearchOption.AllDirectories))
-        {
-            var age = DateTime.Now - File.GetLastWriteTime(file);
-
-            if (age.TotalDays > deleteOlderThanDays)
+            while (!stoppingToken.IsCancellationRequested)
             {
-                try
+                foreach (var directory in Directory.GetDirectories("/mnt/backups/recordings"))
                 {
-                    File.Delete(file);
-                    Console.WriteLine($"Deleted: {file}");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to delete {file}: {ex.Message}");
-                }
-            }
-            else if (age.TotalHours > archiveOlderThanDays * 24)
-            {
-                var archiveDate = File.GetLastWriteTime(file).ToString("dd-MM-yyyy");
-                var archiveDir = Path.Combine(path, "archived", archiveDate);
+                    if (directory.EndsWith("/archived"))
+                    {
+                        continue;
+                    }
                     
-                Directory.CreateDirectory(archiveDir);
+                    ProcessFiles(directory, 90, 3);
+                }
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+            }
+        }
 
-                var destFile = Path.Combine(archiveDir, Path.GetFileName(file));
+        private static void ProcessFiles(string path, int deleteOlderThanDays, int archiveOlderThanDays)
+        {
+            foreach (var file in Directory.EnumerateFiles(path, "*.mkv", SearchOption.AllDirectories))
+            {
+                var age = DateTime.Now - File.GetLastWriteTime(file);
 
-                if (!File.Exists(destFile))
+                if (age.TotalDays > deleteOlderThanDays)
                 {
-                    File.Move(file, destFile);
+                    try
+                    {
+                        File.Delete(file);
+                        Console.WriteLine($"Deleted: {file}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to delete {file}: {ex.Message}");
+                    }
+                }
+                else if (age.TotalHours > archiveOlderThanDays * 24)
+                {
+                    var parentDirectoryName = Directory.GetParent(file)?.Name;
+
+                    if (parentDirectoryName != null)
+                    {
+                        var archiveDir = Path.Combine(path, "archived", parentDirectoryName, "video");
+
+                        Directory.CreateDirectory(archiveDir);
+
+                        var destFile = Path.Combine(archiveDir, Path.GetFileName(file));
+
+                        if (!File.Exists(destFile))
+                        {
+                            File.Move(file, destFile);
+                            Console.WriteLine($"Moved {file} to {destFile}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Could not get the parent directory for {file}");
+                    }
                 }
             }
         }

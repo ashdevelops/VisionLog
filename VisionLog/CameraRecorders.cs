@@ -1,12 +1,15 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-namespace IpCameraRecorder;
+namespace VisionLog;
 
-public class CameraRecorder(string name, string url, TimeSpan segmentDuration) : BackgroundService
+public class CameraRecorder(ILogger<CameraRecorder> logger, string name, string url, int segment) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var camera = new IpCameraSource(name, url, segmentDuration);
+        logger.LogInformation($"[CameraRecorder] ExecuteAsync started for {name}");
+
+        var camera = new IpCameraSource(name, url, segment);
         await camera.StartAsync(stoppingToken);
     }
 }
