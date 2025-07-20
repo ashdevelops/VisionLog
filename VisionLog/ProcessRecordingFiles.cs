@@ -1,14 +1,16 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 namespace VisionLog
 {
-    public class ProcessRecordingFiles : BackgroundService
+    public class ProcessRecordingFiles(IConfiguration config) : BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                foreach (var directory in Directory.GetDirectories("/mnt/backups/recordings"))
+                foreach (var directory in Directory.GetDirectories(
+                        config.GetValue<string>("RecordingPath")))
                 {
                     if (directory.EndsWith("/archived"))
                     {

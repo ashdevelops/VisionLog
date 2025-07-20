@@ -6,13 +6,14 @@ namespace VisionLog;
 public class IpCameraSource(
     string name,
     string url,
-    int segment) : BackgroundService
+    int segment,
+    string path) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
-            var saveDirectory = $"/mnt/backups/recordings/{name}";
+            var saveDirectory = $"{path}/{name}";
             Directory.CreateDirectory(saveDirectory);
 
             var cmd = Cli.Wrap("ffmpeg")

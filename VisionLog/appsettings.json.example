@@ -1,4 +1,5 @@
 {
+  "RecordingPath": "/mnt/backups/recordings",
   "MonitorConfigs": [
     {
       "Name": "Bedroom",
